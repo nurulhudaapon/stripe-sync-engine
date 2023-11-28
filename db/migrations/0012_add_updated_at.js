@@ -1,4 +1,6 @@
-create or replace function set_updated_at() returns trigger
+const ownerRole = process.env.DB_OWNER_ROLE || 'postgres'
+
+const sql = `create or replace function set_updated_at() returns trigger
     language plpgsql
 as
 $$
@@ -8,7 +10,7 @@ begin
 end;
 $$;
 
-alter function set_updated_at() owner to postgres;
+alter function set_updated_at() owner to ${ownerRole};
 
 alter table stripe.subscriptions
     add updated_at timestamptz default timezone('utc'::text, now()) not null;
@@ -107,4 +109,6 @@ create trigger handle_updated_at
     before update
     on stripe.plans
     for each row
-    execute procedure set_updated_at();
+    execute procedure set_updated_at();`
+
+module.exports.generateSql = () => sql
